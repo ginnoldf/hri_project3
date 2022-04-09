@@ -16,9 +16,6 @@ end
 % by default, it loads the robot with the structure data format
 robot_struct = loadrobot(robot_name); 
 
-% store sampled trajectories
-theta_samples = cell(1,num_sampled_traj);
-
 %% for calculating the acceleration of theta
 % Precompute
 A_k = eye(num_waypoints - 1, num_waypoints - 1);
@@ -31,51 +28,49 @@ Rinv = inv(R);
 M = 1 / num_waypoints * Rinv ./ max(Rinv, [], 1); % normalized by each column, no longer symmetric
 Rinv = 1.5*Rinv/sum(sum(Rinv)); % normalized R inverse, so that the sample is still within the voxel world
 
-
 %%
 %Planner
-q_time = [];   % Trajectory cost Q(theta), t-vector
+Q_time = [];   % Trajectory cost Q(theta), t-vector
 RAR_time = [];
 
-[~, q] = stompTrajCost(robot_struct, theta, R, voxel_world);
-q_old = 0;
+[~, Q] = stompTrajCost(robot_struct, theta, R, voxel_world);
+Q_old = 0;
 
 iter=0;
-while abs(q_theta - q_old) > convergence_threshold
+while abs(Q_theta - Q_old) > convergence_threshold
     iter = iter + 1;
-    % overall cost: Qtheta
-    q_old = q;
+    % overall cost: Q
+    Q_old = Q;
     % use tic and toc for printing out the running time
     tic
     % TODO
-    % Sample noisy trajectories
-    epsilon = cell(1,num_sampled_traj);
-    for traj = 1:num_sampled_traj
-        theta_samples{traj} = zeros(num_joints, num_waypoints);
-        epsilon{traj} = zeros(num_joints, num_waypoints);
-        for joint = 1:num_joints
-            epsilon{traj}(joint,:) = mvnrnd(zeros(num_waypoints), Rinv, 1);
-            theta_samples{traj}(joint,:) = theta(joint,:) + epsilon{traj}(joint,:);
-        end
-    end
+    % sample noisy trajectories
+    [theta_samples, epsilon] = stompSamples(num_sampled_traj, Rinv, theta);
 
-    % Calculate Local trajectory cost
+    % iterate over trajectories and calculate their local cost
     S = zeros(num_sampled_traj, num_waypoints);
     for traj = 1:num_sampled_traj
-        [, ] = stompTrajCost(robot_struct, theta_samples, R, voxel_world);
+        [S(traj,:), ~] = stompTrajCost(robot_struct, theta_samples(traj), R, voxel_world);
     end
     
-    % Given the local traj cost, update local trajectory probability
-
+    % Given the local traj cost, calculate local trajectory probability
+    traj_probs = zeros(num_sampled_traj, num_waypoints);
+    for traj = 1:num_sampled_traj
+        traj_probs(traj,:) = stompUpdateProb(S(traj,:));
+    end
     
     % Compute delta theta (aka gradient estimator)
+    d_theta = stompDTheta(traj_probs, epsilon);
 
+    % Calculate the new theta trajectory
+    [theta, ~] = stompUpdateTheta(theta, d_theta, M);
 
     % Compute the cost of the new trajectory
- 
+    [~, Q] = stompTrajCost(robot_struct, theta, R, voxel_world);
+
     toc
 
-    Q_time = [Q_time Qtheta];
+    Q_time = [Q_time Q];
     % control cost
     RAR = 1/2 * sum(sum(theta(:, 2:nDiscretize-1) * R * theta(:, 2:nDiscretize-1)'));
     RAR_time = [RAR_time RAR];

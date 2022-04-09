@@ -1,5 +1,5 @@
 % Given a trajectory, calculate its cost
-function [S, q] = stompTrajCost(robot_struct, theta, R, voxel_world)
+function [S, Q] = stompTrajCost(robot_struct, theta, R, voxel_world)
 % Compute the local trajectory cost at each discretization theta point, as 
 % well as the overall trajecotry cost (the Qtheta)
 
@@ -39,7 +39,7 @@ S = 1000 * qo + qc;
 
 % sum over time and add the smoothness cost
 theta = theta(:, 2:end-1);
-q = sum(S) + 1/2 * sum(theta * R * theta', "all");
+Q = sum(S) + 1/2 * sum(theta * R * theta', "all");
 
 end
 
