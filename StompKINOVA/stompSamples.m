@@ -11,7 +11,7 @@
 %   epsilon: sampled Gaussian noise for each joint
 %       3dim matrix with size (num_sampled_traj, num_waypoints, num_joints)
 
-function [theta_samples, epsilon] = stompSamples(num_sampled_traj,sigma,theta)
+function [theta_samples, epsilon] = stompSamples(num_sampled_traj, sigma, theta)
 % Sample theta (joints angles) trajectory 
 % 
 % [nJoints, nDiscretize] = size(theta);
@@ -45,9 +45,11 @@ function [theta_samples, epsilon] = stompSamples(num_sampled_traj,sigma,theta)
 % return noise and noisy trajectories
 epsilon = zeros(num_sampled_traj, num_waypoints, num_joints);
 theta_samples = zeros(num_sampled_traj, num_waypoints, num_joints);
+
 for traj = 1:num_sampled_traj
     for joint = 1:num_joints
-        epsilon(traj,:,joint) = mvnrnd(zeros(num_waypoints), sigma, 1);
+        % epsilon is 0 for start and end position
+        epsilon(traj,2:end-1,joint) = mvnrnd(zeros(1, num_waypoints-2), sigma, 1);
         theta_samples(traj,:,joint) = theta(joint,:) + epsilon(traj,:,joint);
     end
 end

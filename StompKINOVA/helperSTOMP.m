@@ -37,7 +37,7 @@ RAR_time = [];
 Q_old = 0;
 
 iter=0;
-while abs(Q_theta - Q_old) > convergence_threshold
+while abs(Q - Q_old) > convergence_threshold
     iter = iter + 1;
     % overall cost: Q
     Q_old = Q;

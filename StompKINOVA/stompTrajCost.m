@@ -1,3 +1,18 @@
+% Input: 
+%   robot_struct: the robot structure
+%       1x1 rigidBodyTree
+%   theta: the trajectory for which the cost needs to be calculated
+%       2dim matrix of size (num_joints, num_waypoints)
+%   R: R matrix for calculating the smoothness term
+%       2dim matrix of size(num_waypoints-2, num_waypoints-2)
+%   voxel_world: voxel world 
+%       struct
+% Output:
+%   S: local cost of the waypoints of a trajectory
+%       2dim matrix of size (1, num_waypoints)
+%   Q: cost of the trajectory
+%       double value
+%
 % Given a trajectory, calculate its cost
 function [S, Q] = stompTrajCost(robot_struct, theta, R, voxel_world)
 % Compute the local trajectory cost at each discretization theta point, as 
