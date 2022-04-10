@@ -23,6 +23,7 @@ function traj_probs = stompUpdateProb(S)
     % trajectory cost only includes obstacle cost, which at the end of the time
     % duration, the speed is 0, or when there is no collision.
     expCost(isnan(expCost)) = 0;
+
     % normalize the exponentialized cost to have the probabilities
     traj_probs = expCost./ sum(expCost, 1);
     traj_probs(isnan(traj_probs)) = 0;

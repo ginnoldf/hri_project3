@@ -13,48 +13,43 @@
 %   Q: cost of the trajectory
 %       double value
 %
-% Given a trajectory, calculate its cost
-function [S, Q] = stompTrajCost(robot_struct, theta, R, voxel_world)
-    % Compute the local trajectory cost at each discretization theta point, as 
-    % well as the overall trajecotry cost (the Qtheta)
+% Compute the local trajectory cost at each waypoint, as well as the 
+% overall trajecotry cost Q
+function [S, Q, acc_cost] = stompTrajCost(robot_struct, theta, R, voxel_world)
 
-    % Costi = stompCompute_Cost(robot, theta, Env);
-    % Compute the cost of all discretized points on one trajectory
+    % get number of waypoints
     [~, num_waypoints] = size(theta);
-    % Obstacle cost 
+
+    % iterate over waypoints to calculate the obstacle and constraint costs
     qo = zeros(1, num_waypoints);
-    % Constraint costs
     qc = zeros(1, num_waypoints);
+    for waypoint_idx = 1:num_waypoints
 
-    % Get the coordinates of joints in World frame
-    [X, ~] = updateJointsWorldPosition(robot_struct, theta(:, 1));
-    % Construct the spheres around the robot manipulator for collision
-    % avoidance
-    [sphere_centers,radi] = stompRobotSphere(X);
-    % Initial velocity at the sphere centers around the manipulator is 0
-    vel = zeros(length(sphere_centers), 1);
-    qo(1) = stompObstacleCost(sphere_centers, radi, voxel_world, vel);
+        % get the coordinates and spheres of joints in World frame
+        [joint_positions, ~] = updateJointsWorldPosition(robot_struct, theta(:, waypoint_idx));
+        [sphere_centers, radi] = stompRobotSphere(joint_positions);
 
-    for waypoint_idx = 2 : num_waypoints
-        sphere_centers_prev = sphere_centers;
-        % Calculate the kinematics of the manipulator, given the
-        % configuration theta values at different time (i=2:nDiscretize)
-        [X, ~] = updateJointsWorldPosition(robot_struct, theta(:, waypoint_idx));
-        [sphere_centers, radi] = stompRobotSphere(X);
-        % xb: 3D workspace position of sphere b at the current time
-        % Approximate the speed (xb_dot) using the finite difference of the current and
-        % the previous position
-        vel = vecnorm(sphere_centers_prev - sphere_centers,2,2);
+        % initial velocity at the sphere centers around the manipulator is 0
+        if waypoint_idx == 1
+            vel = zeros(length(sphere_centers), 1);
+        else
+            vel = vecnorm(sphere_centers_prev - sphere_centers,2,2);
+        end
+        
+        % calculate cost of the robots position and velocity for this waypoint
         qo(waypoint_idx) = stompObstacleCost(sphere_centers, radi, voxel_world, vel);
         
+        % we need to save the sphere centers for the next iteration
+        sphere_centers_prev = sphere_centers;
     end
 
     % local trajectory cost
     S = 1000 * qo + qc;
 
-    % sum over time and add the smoothness cost
-    theta = theta(:, 2:end-1);
-    Q = sum(S) + 1/2 * sum(theta * R * theta', "all");
+    % sum over time and add the smoothness cost, do not consider start and end waypoint
+    theta_reduced = theta(:, 2:end-1);
+    acc_cost = 1/2 * sum(theta_reduced * R * theta_reduced', "all");
+    Q = sum(S) + acc_cost;
 
 end
 

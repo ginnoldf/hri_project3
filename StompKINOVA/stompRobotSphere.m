@@ -24,10 +24,11 @@ function [centers, radi] = stompRobotSphere(X)
             parent_joint_position = X(joint_idx-1, 1:3);
         end
         child_joint_poisition = X(joint_idx, 1:3);
-        % number of spheres used to cover the kth link
-        rad = 0.05;  % radius of the sphere, tuning parameters 
-        % calculate the number of shperes to cover the link
-        num_spheres = ceil(norm(child_joint_poisition - parent_joint_position) / rad) + 1; % one sphere every 0.05m
+ 
+        % calculate the number of spheres to cover the link
+        rad = 0.05;  % radius of the sphere, tuning parameters
+        num_spheres = ceil(norm(child_joint_poisition - parent_joint_position) / rad) + 1; % one sphere every rad
+        
         % Calculate the centers of the spheres
         curr_center_cell = arrayfun(@(x1, x2) linspace(x1, x2, num_spheres), parent_joint_position', child_joint_poisition', 'UniformOutput', false);
         % xyz coordinates of each sphere

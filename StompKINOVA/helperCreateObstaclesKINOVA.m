@@ -2,8 +2,10 @@
 % define the workspace (the voxel world limits). Depending on the robot's reach range.
 Env_size = [-1, -1, -1; 2, 2, 2];  % [xmin, ymin, zmin] for 1st row, xyz-lengths for 2nd row
 voxel_size = [0.02, 0.02, 0.02];  % unit: m
+
 % Binary map: all free space initially, 
 binary_world = zeros(Env_size(2, 1) / voxel_size(1), Env_size(2, 2) / voxel_size(2), Env_size(2, 3) / voxel_size(3));
+
 % binary_world_offset = Env_size(1, :)./ voxel_size;
 %% XYZ metric representation (in meter) for each voxel 
 % !!!!Watch out for the useage of meshgrid:
@@ -11,16 +13,21 @@ binary_world = zeros(Env_size(2, 1) / voxel_size(1), Env_size(2, 2) / voxel_size
 % vectors x, y, and z. The grid represented by X, Y, and Z has size 
 % length(y)-by-length(x)-by-length(z).
 % The 3D coordinate is of the center of the voxels
-[Xw, Yw, Zw] = meshgrid(Env_size(1, 1) + 0.5 * voxel_size(1) : voxel_size(1) : Env_size(1, 1) + Env_size(2, 1) - 0.5 * voxel_size(1), ...
-       Env_size(1, 2) + 0.5 * voxel_size(2) : voxel_size(2) : Env_size(1, 2) + Env_size(2, 2) - 0.5 * voxel_size(2), ...
-    Env_size(1, 3) + 0.5 * voxel_size(3) : voxel_size(3) : Env_size(1, 3) + Env_size(2, 3) - 0.5 * voxel_size(3));
+first_vc_x = Env_size(1, 1) + 0.5 * voxel_size(1);
+last_vc_x = Env_size(1, 1) + Env_size(2, 1) - 0.5 * voxel_size(1);
+first_vc_y = Env_size(1, 2) + 0.5 * voxel_size(2);
+last_vc_y = Env_size(1, 2) + Env_size(2, 2) - 0.5 * voxel_size(2);
+first_vc_z = Env_size(1, 3) + 0.5 * voxel_size(3);
+last_vc_z = Env_size(1, 3) + Env_size(2, 3) - 0.5 * voxel_size(3);
+[Xw, Yw, Zw] = meshgrid(first_vc_x : voxel_size(1) : last_vc_x, ...
+        first_vc_y : voxel_size(2) : last_vc_y, ...
+        first_vc_z : voxel_size(3) : last_vc_z);
 
 %% Static obstacles
 lbox = 0.08*2; % length of the cube
 box_center = [0.4 0.46 0.26]; % (metric) world coordinates of the box center
 aObs = collisionBox(lbox,lbox,lbox);  
-aObs.Pose = trvec2tform(box_center);   
-
+aObs.Pose = trvec2tform(box_center);
 
 % Set static obstacles
 world = {aObs}; % try adding more static obstacles aObs to dObs or create your own

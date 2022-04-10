@@ -1,6 +1,6 @@
 % Input: 
 %   sphere_centers: centers of the spheres
-%       2dim matrix of size (num_joints, 4)
+%       2dim matrix of size (num_spheres, 3)
 %   radi: radii around the centers, currently 0.05
 %       TODO vector of size num_joints
 %   voxel_world: voxel world 
@@ -27,15 +27,20 @@ function cost = stompObstacleCost(sphere_centers, radi, voxel_world, vel)
     vw_idx = ceil((sphere_centers - env_corner_vec) ./ voxel_world.voxel_size);
 
     % Eq (13) in the STOMP conference paper
-    try
-        num_spheres = length(sphere_centers);
-        cost_array = zeros(num_spheres, 1);
+    num_spheres = length(sphere_centers);
+    cost_array = zeros(num_spheres, 1);
 
-        for sphere_idx = 1:num_spheres
-            cost_array(sphere_idx) = max([safety_margin + radi(sphere_idx) - voxel_world_sEDT(vw_idx(sphere_idx)), 0]) * abs(vel(sphere_idx));
-        end
+    for sphere_idx = 1:num_spheres
+        % get sphere indexes in voxel world
+        sphere_vw_x = vw_idx(sphere_idx,1);
+        sphere_vw_y = vw_idx(sphere_idx,2);
+        sphere_vw_z = vw_idx(sphere_idx,3);
 
-        cost = sum(cost_array);
-    catch
-        vw_idx = ceil((sphere_centers - env_corner_vec) ./ voxel_world.voxel_size);
+        cost_array(sphere_idx) = max([safety_margin + radi(sphere_idx) - ...
+            voxel_world_sEDT(sphere_vw_x, sphere_vw_y, sphere_vw_z), 0]) ...
+            * abs(vel(sphere_idx));
     end
+
+    cost = sum(cost_array);
+
+end
