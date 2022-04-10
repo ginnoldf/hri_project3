@@ -24,18 +24,18 @@ function cost = stompObstacleCost(sphere_centers, radi, voxel_world, vel)
     % in the voxel world.
     env_corner = voxel_world.Env_size(1, :); % [xmin, ymin, zmin] of the metric world
     env_corner_vec = repmat(env_corner, length(sphere_centers), 1); % copy it to be consistent with the size of sphere_centers
-    idx = ceil((sphere_centers - env_corner_vec) ./ voxel_world.voxel_size);
+    vw_idx = ceil((sphere_centers - env_corner_vec) ./ voxel_world.voxel_size);
 
     % Eq (13) in the STOMP conference paper
     try
         num_spheres = length(sphere_centers);
         cost_array = zeros(num_spheres, 1);
 
-        for sphere = 1:num_spheres
-            cost_array(sphere) = max([safety_margin + radi(sphere) - voxel_world_sEDT(idx(sphere)), 0]) * abs(vel(sphere));
+        for sphere_idx = 1:num_spheres
+            cost_array(sphere_idx) = max([safety_margin + radi(sphere_idx) - voxel_world_sEDT(vw_idx(sphere_idx)), 0]) * abs(vel(sphere_idx));
         end
 
         cost = sum(cost_array);
     catch
-        idx = ceil((sphere_centers - env_corner_vec) ./ voxel_world.voxel_size);
+        vw_idx = ceil((sphere_centers - env_corner_vec) ./ voxel_world.voxel_size);
     end

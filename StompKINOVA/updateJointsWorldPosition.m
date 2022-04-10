@@ -21,19 +21,18 @@ function [X, T] = updateJointsWorldPosition(robot_struct, theta)
     t_configuration = robot_struct.homeConfiguration; % copy the home configuration struct
     [t_configuration.JointPosition] = theta_cell{:}; % update the Joint position using theta
 
-    % get the number of joints
     num_joints = size(theta,1);
     T = cell(1, num_joints);
     X = zeros(num_joints, 4); 
 
-    for k = 1:num_joints
+    for joint_idx = 1:num_joints
         % get the homegeneous transformation from kth joint's frame to the
         % base frame
         % getTransform can only takes in structure array Configuration
-        bodyname = robot_struct.Bodies{1, k}.Name;
-        T{k} = getTransform(robot_struct, t_configuration, bodyname);
+        bodyname = robot_struct.Bodies{1, joint_idx}.Name;
+        T{joint_idx} = getTransform(robot_struct, t_configuration, bodyname);
         % Get joint's world coordinates
-        X(k,:) = T{k}(:,4)';
+        X(joint_idx,:) = T{joint_idx}(:,4)';
     end
     
 end
