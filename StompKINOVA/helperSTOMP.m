@@ -28,22 +28,39 @@ Rinv = 1.5 * Rinv / sum(sum(Rinv)); % normalized R inverse, so that the sample i
 
 %% Planner
 Q_list = [];
+qo_list = [];
+qc_list = [];
 acc_cost_list = [];
 
-[~, Q, ~, ~, ~, ~] = stompTrajCost(robot_struct, theta, R, voxel_world);
-Q_old = Q + convergence_threshold + 1; % we do not want to meet the convergence threshold in the first iteration
+% get initial Q and set Q_old
+[~, Q, ~, ~, ~, ~, ~, ~] = stompTrajCost(robot_struct, theta, R, voxel_world);
+Q_old = Q + convergence_threshold + 100; % we do not want to meet the convergence threshold in the first iteration
 
+% timing lists
+iter_time_list = [];
+sample_time_list = [];
+cost_time_list = [];
+world_pos_time_list = [];
+spheres_time_list = [];
+qo_time_list = [];
+probs_time_list = [];
+dtheta_time_list = [];
+new_traj_time_list = [];
+
+% start loop
 iter = 1;
 max_iter = 30;
-while abs(Q - Q_old) > convergence_threshold
-    
-    Q_old = Q;
+Q_difference = 100;
+while Q_difference > convergence_threshold
+
     iter_timer = tic;
     fprintf(['Timings for Iteration ', num2str(iter), ':\n']);
 
     % sample noisy trajectories and take time
     sample_timer = tic;
-    [theta_samples, epsilon] = stompSamples(num_sampled_traj, Rinv, theta);
+    %variance_factor = Q_difference/30;
+    variance_factor = 1;
+    [theta_samples, epsilon] = stompSamples(num_sampled_traj, variance_factor*Rinv, theta);
     sample_time = toc(sample_timer);
     fprintf(['Sampling trajectories: ', num2str(sample_time), 's\n']);
 
@@ -55,7 +72,7 @@ while abs(Q - Q_old) > convergence_threshold
     qo_time = 0;
     for traj_idx = 1:num_sampled_traj
         traj = squeeze(theta_samples(traj_idx,:,:));
-        [S(traj_idx,:), ~, ~, traj_world_pos_time, traj_spheres_time, traj_qo_time] = stompTrajCost(robot_struct, traj, R, voxel_world);
+        [S(traj_idx,:), ~, ~, ~, ~, traj_world_pos_time, traj_spheres_time, traj_qo_time] = stompTrajCost(robot_struct, traj, R, voxel_world);
         world_pos_time = world_pos_time + traj_world_pos_time;
         spheres_time = spheres_time + traj_spheres_time;
         qo_time = qo_time + traj_qo_time;
@@ -86,18 +103,31 @@ while abs(Q - Q_old) > convergence_threshold
     fprintf(['Calculating new trajectory: ', num2str(new_traj_time), 's\n']);
 
     % Compute the cost of the new trajectory
-    [~, Q, acc_cost, ~, ~] = stompTrajCost(robot_struct, theta, R, voxel_world);
+    [~, Q, qo, qc, acc_cost, ~, ~] = stompTrajCost(robot_struct, theta, R, voxel_world);
 
     iter_time = toc(iter_timer);
     fprintf(['In total: ', num2str(iter_time), 's\n\n']);
 
     %% Evaluation of iteration result
     Q_list = [Q_list Q];
+    qo_list = [qo_list qo];
+    qc_list = [qc_list qc];
     acc_cost_list = [acc_cost_list acc_cost];
+
+    % keep all timings for evaluation
+    iter_time_list = [iter_time_list iter_time];
+    sample_time_list = [sample_time_list sample_time];
+    cost_time_list = [cost_time_list cost_time];
+    world_pos_time_list = [world_pos_time_list world_pos_time];
+    spheres_time_list = [spheres_time_list spheres_time];
+    qo_time_list = [qo_time_list qo_time];
+    probs_time_list = [probs_time_list probs_time];
+    dtheta_time_list = [dtheta_time_list dtheta_time];
+    new_traj_time_list = [new_traj_time_list new_traj_time] ;
 
     %% Stopping conditions
     % max iterations reached
-    if iter > max_iter
+    if iter >= max_iter
         disp('Maximum iteration (30) has reached.')
         break
     % estimated gradient is 0
@@ -106,16 +136,36 @@ while abs(Q - Q_old) > convergence_threshold
         break
     end
 
+    % prepare next iteration
     iter = iter + 1;
+    Q_difference = abs(Q - Q_old);
+    Q_old = Q;
 
 end
 
 disp(['STOMP Finished after ', num2str(iter), ' iterations.']);
+
+% print timing results
+fprintf(['Mean iteration time: ', num2str(mean(iter_time_list)), 's\n']);
+fprintf(['Mean sample time: ', num2str(mean(sample_time_list)), 's\n']);
+fprintf(['Mean cost time: ', num2str(mean(cost_time_list)), 's\n']);
+fprintf(['Mean world position time: ', num2str(mean(world_pos_time_list)), 's\n']);
+fprintf(['Mean spheres time: ', num2str(mean(spheres_time_list)), 's\n']);
+fprintf(['Mean obstacle cost time: ', num2str(mean(qo_time_list)), 's\n']);
+fprintf(['Mean probs time: ', num2str(mean(probs_time_list)), 's\n']);
+fprintf(['Mean dtheta time: ', num2str(mean(dtheta_time_list)), 's\n']);
+fprintf(['Mean new trajectory time: ', num2str(mean(new_traj_time_list)), 's\n']);
+
+% print cost evolution
 Q_list
+qo_list
+qc_list
 acc_cost_list
 
+%% Nice plots
+plot_costs(Q_list, qo_list, qc_list, acc_cost_list, 'task1_run1.png');
+
 %% Plot trajectory
-% axis tight manual % this ensures that getframe() returns a consistent size
 for waypoint_idx = 1:num_waypoints
     show(robot, theta(:,waypoint_idx),'PreservePlot', false, 'Frames', 'off');
     drawnow;

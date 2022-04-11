@@ -23,14 +23,14 @@
 %
 % Compute the local trajectory cost at each waypoint, as well as the 
 % overall trajecotry cost Q
-function [S, Q, acc_cost, world_pos_time, spheres_time, qo_time] = stompTrajCost(robot_struct, theta, R, voxel_world)
+function [S, Q, qo, qc, acc_cost, world_pos_time, spheres_time, qo_time] = stompTrajCost(robot_struct, theta, R, voxel_world)
 
     % get number of waypoints
     [~, num_waypoints] = size(theta);
 
     % iterate over waypoints to calculate the obstacle and constraint costs
-    qo = zeros(1, num_waypoints);
-    qc = zeros(1, num_waypoints);
+    qo_list = zeros(1, num_waypoints);
+    qc_list = zeros(1, num_waypoints);
     world_pos_time = 0;
     spheres_time = 0;
     qo_time = 0;
@@ -55,7 +55,7 @@ function [S, Q, acc_cost, world_pos_time, spheres_time, qo_time] = stompTrajCost
         
         % calculate cost of the robots position and velocity for this waypoint
         qo_timer = tic;
-        qo(waypoint_idx) = stompObstacleCost(sphere_centers, radi, voxel_world, vel);
+        qo_list(waypoint_idx) = stompObstacleCost(sphere_centers, radi, voxel_world, vel);
         qo_time = qo_time + toc(qo_timer);
         
         % we need to save the sphere centers for the next iteration
@@ -63,10 +63,12 @@ function [S, Q, acc_cost, world_pos_time, spheres_time, qo_time] = stompTrajCost
     end
 
     % local trajectory cost
-    S = 1000 * qo + qc;
+    S = 1000 * qo_list + qc_list;
 
     % sum over time and add the smoothness cost, do not consider start and end waypoint
     theta_reduced = theta(:, 2:end-1);
+    qo = sum(qo_list);
+    qc = sum(qc_list);
     acc_cost = 1/2 * sum(theta_reduced * R * theta_reduced', "all");
     Q = sum(S) + acc_cost;
 
