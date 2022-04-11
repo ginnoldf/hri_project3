@@ -2,8 +2,10 @@
 % Input: 
 %       robot_struct: the Matlab robot structure object
 %       theta: the joints rotation angles
+%           vector of length num_joints
 % Output:
 %       joint_positions: Joints' positions in the world frame
+%           matrix of size (num_joints, 4)
 %       T: Homogeneous Transformation from the Joint frame to the base frame
 %
 % In this sample code, we directly call the MATLAB built-in function 
@@ -28,6 +30,5 @@ function [joint_positions, T] = updateJointsWorldPosition(robot_struct, theta)
 
         % Get joint's world coordinates
         joint_positions(joint_idx,:) = T{joint_idx}(:,4)';
-        
     end
 end

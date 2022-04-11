@@ -30,7 +30,7 @@ Rinv = 1.5 * Rinv / sum(sum(Rinv)); % normalized R inverse, so that the sample i
 Q_list = [];
 acc_cost_list = [];
 
-[~, Q, ~, ~, ~] = stompTrajCost(robot_struct, theta, R, voxel_world);
+[~, Q, ~, ~, ~, ~] = stompTrajCost(robot_struct, theta, R, voxel_world);
 Q_old = Q + convergence_threshold + 1; % we do not want to meet the convergence threshold in the first iteration
 
 iter = 1;
@@ -50,17 +50,20 @@ while abs(Q - Q_old) > convergence_threshold
     % iterate over trajectories and calculate their local cost and take time
     cost_timer = tic;
     S = zeros(num_sampled_traj, num_waypoints);
+    world_pos_time = 0;
     spheres_time = 0;
     qo_time = 0;
     for traj_idx = 1:num_sampled_traj
         traj = squeeze(theta_samples(traj_idx,:,:));
-        [S(traj_idx,:), ~, ~, traj_spheres_time, traj_qo_time] = stompTrajCost(robot_struct, traj, R, voxel_world);
+        [S(traj_idx,:), ~, ~, traj_world_pos_time, traj_spheres_time, traj_qo_time] = stompTrajCost(robot_struct, traj, R, voxel_world);
+        world_pos_time = world_pos_time + traj_world_pos_time;
         spheres_time = spheres_time + traj_spheres_time;
         qo_time = qo_time + traj_qo_time;
     end
     cost_time = toc(cost_timer);
     fprintf(['Calculating costs: ', num2str(cost_time), 's\n']);
     fprintf(['  Avg cost time per trajectory: ', num2str(cost_time/num_sampled_traj), 's\n']);
+    fprintf(['  Calculating joint world positions: ', num2str(world_pos_time), 's\n']);
     fprintf(['  Calculating spheres: ', num2str(spheres_time), 's\n']);
     fprintf(['  Calculating obstacle costs: ', num2str(qo_time), 's\n']);
 
