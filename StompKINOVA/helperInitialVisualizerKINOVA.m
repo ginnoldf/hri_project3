@@ -27,7 +27,3 @@ for i=1:numel(world)
     [~,pObj] = show(world{i});
     pObj.LineStyle = 'none';
 end
-
-
-
-
