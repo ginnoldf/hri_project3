@@ -12,10 +12,16 @@
 %       2dim matrix of size (1, num_waypoints)
 %   Q: cost of the trajectory
 %       double value
+%   acc_cost: acceleration cost
+%       double value
+%   spheres_time: time needed to calculate the spheres in s
+%       double value
+%   qo_time: time needed to calculate the obstacle cost in s
+%       double value
 %
 % Compute the local trajectory cost at each waypoint, as well as the 
 % overall trajecotry cost Q
-function [S, Q, acc_cost] = stompTrajCost(robot_struct, theta, R, voxel_world)
+function [S, Q, acc_cost, spheres_time, qo_time] = stompTrajCost(robot_struct, theta, R, voxel_world)
 
     % get number of waypoints
     [~, num_waypoints] = size(theta);
@@ -23,11 +29,15 @@ function [S, Q, acc_cost] = stompTrajCost(robot_struct, theta, R, voxel_world)
     % iterate over waypoints to calculate the obstacle and constraint costs
     qo = zeros(1, num_waypoints);
     qc = zeros(1, num_waypoints);
+    spheres_time = 0;
+    qo_time = 0;
     for waypoint_idx = 1:num_waypoints
 
         % get the coordinates and spheres of joints in World frame
+        spheres_timer = tic;
         [joint_positions, ~] = updateJointsWorldPosition(robot_struct, theta(:, waypoint_idx));
         [sphere_centers, radi] = stompRobotSphere(joint_positions);
+        spheres_time = spheres_time + toc(spheres_timer);
 
         % initial velocity at the sphere centers around the manipulator is 0
         if waypoint_idx == 1
@@ -37,7 +47,9 @@ function [S, Q, acc_cost] = stompTrajCost(robot_struct, theta, R, voxel_world)
         end
         
         % calculate cost of the robots position and velocity for this waypoint
+        qo_timer = tic;
         qo(waypoint_idx) = stompObstacleCost(sphere_centers, radi, voxel_world, vel);
+        qo_time = qo_time + toc(qo_timer);
         
         % we need to save the sphere centers for the next iteration
         sphere_centers_prev = sphere_centers;
