@@ -50,7 +50,7 @@ new_traj_time_list = [];
 % start loop
 iter = 1;
 max_iter = 30;
-Q_difference = 100;
+Q_difference = 10;
 while Q_difference > convergence_threshold
 
     iter_timer = tic;
@@ -58,7 +58,7 @@ while Q_difference > convergence_threshold
 
     % sample noisy trajectories and take time
     sample_timer = tic;
-    %variance_factor = Q_difference/30;
+    %variance_factor = Q/100;
     variance_factor = 1;
     [theta_samples, epsilon] = stompSamples(num_sampled_traj, variance_factor*Rinv, theta);
     sample_time = toc(sample_timer);
@@ -123,7 +123,7 @@ while Q_difference > convergence_threshold
     qo_time_list = [qo_time_list qo_time];
     probs_time_list = [probs_time_list probs_time];
     dtheta_time_list = [dtheta_time_list dtheta_time];
-    new_traj_time_list = [new_traj_time_list new_traj_time] ;
+    new_traj_time_list = [new_traj_time_list new_traj_time];
 
     %% Stopping conditions
     % max iterations reached
@@ -143,7 +143,7 @@ while Q_difference > convergence_threshold
 
 end
 
-disp(['STOMP Finished after ', num2str(iter), ' iterations.']);
+disp(['STOMP Finished after ', num2str(iter-1), ' iterations.']);
 
 % print timing results
 fprintf(['Mean iteration time: ', num2str(mean(iter_time_list)), 's\n']);
