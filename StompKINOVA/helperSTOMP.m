@@ -107,6 +107,7 @@ while Q_difference > convergence_threshold
 
     iter_time = toc(iter_timer);
     fprintf(['In total: ', num2str(iter_time), 's\n\n']);
+    fprintf(['Cost: ', num2str(Q), 's\n\n']);
 
     %% Evaluation of iteration result
     Q_list = [Q_list Q];

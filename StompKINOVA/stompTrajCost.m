@@ -62,10 +62,17 @@ function [S, Q, qo, qc, acc_cost, world_pos_time, spheres_time, qo_time] = stomp
         
         % we need to save the sphere centers for the next iteration
         sphere_centers_prev = sphere_centers;
+
+        % use constraint cost
+        %qc_list(waypoint_idx) = stompConstraintCost(robot_struct, theta);
     end
 
     % local trajectory cost
-    S = 1000 * qo_list + qc_list;
+    qo_factor = 1000;
+    qc_factor = 1000;
+    qo_list = qo_list * qo_factor;
+    qc_list = qc_list * qc_factor;
+    S = qo_list + qc_list;
 
     % sum over time and add the smoothness cost, do not consider start and end waypoint
     theta_reduced = theta(:, 2:end-1);

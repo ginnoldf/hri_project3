@@ -21,7 +21,7 @@ function cost = stompConstraintCost(robot_struct, theta)
     rotation_mat = base_endeffector_T(1:3,1:3);
 
     % calculate rotatet y-axis
-    endeffector_y_axis = rotation_mat * [0 1 0];
+    endeffector_y_axis = rotation_mat * [0 1 0]';
 
     % calculate y-axis angle to desired y-axis (0 1 0)
     % https://www.analyzemath.com/stepbystep_mathworksheets/vectors/vector3D_angle.html
