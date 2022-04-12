@@ -5,9 +5,9 @@ convergence_threshold = 0.1; % convergence threshhold
 
 %% Initial guess of joint angles theta - linear interpolation
 theta_0 = currentRobotJConfig;
+num_joints = length(theta_0);
 theta_T = finalRobotJConfig;
 theta = zeros(num_joints, num_waypoints);
-num_joints = length(theta_0);
 for joint_idx = 1:num_joints
     theta(joint_idx,:) = linspace(theta_0(joint_idx), theta_T(joint_idx), num_waypoints);
 end

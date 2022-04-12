@@ -39,7 +39,8 @@ function [S, Q, qo, qc, acc_cost, world_pos_time, spheres_time, qo_time] = stomp
 
         % get the coordinates of joints in world frame
         world_pos_timer = tic;
-        [joint_positions, ~] = updateJointsWorldPosition(robot_struct, theta(:, waypoint_idx));
+        %[joint_positions, ~] = updateJointsWorldPosition(robot_struct, theta(:, waypoint_idx));
+        [joint_positions, ~] = updateJointsWorldPositionPOE(robot_struct, theta(:, waypoint_idx), base_joint_T);
         world_pos_time = world_pos_time + toc(world_pos_timer);
         
         % get the spheres of joints in world frame

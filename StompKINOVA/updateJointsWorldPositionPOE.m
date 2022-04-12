@@ -54,13 +54,11 @@ function [joint_positions, T] = updateJointsWorldPositionPOE(robot_struct, theta
         % product of exponentials formula (4.14) from the textbook
         T{joint_idx} = eye(4);
         for i = 1:joint_idx
-            T{joint_idx} = T{joint_idx} * squeeze(mat_exps(joint_idx,:,:));
+            T{joint_idx} = T{joint_idx} * squeeze(mat_exps(i,:,:));
         end
         T{joint_idx} = T{joint_idx} * base_joint_T{joint_idx};
-        
+
         % get joint position from transformation
         joint_positions(joint_idx,:) = T{joint_idx}(:,4)';
-
     end
-
 end
