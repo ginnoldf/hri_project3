@@ -10,7 +10,7 @@
 %
 % In this sample code, we directly call the MATLAB built-in function 
 % getTransform to calculate the forward kinemetics
-function [joint_positions, T] = updateJointsWorldPosition(robot_struct, theta)
+function [joint_positions, T] = updateJointsWorldPositionGetTransform(robot_struct, theta)
 
     % Update the robot configuration structure to use getTransform
     % Refer to: https://www.mathworks.com/matlabcentral/answers/31273-how-to-update-struct-array-fields-with-mutiple-values
@@ -22,17 +22,11 @@ function [joint_positions, T] = updateJointsWorldPosition(robot_struct, theta)
     num_joints = size(theta,1);
     T = cell(1, num_joints);
     joint_positions = zeros(num_joints, 4); 
-    
-    % calculate transformation and position for first joint
-    T{1} = robot_struct.Bodies{1, 1}.Joint.JointToParentTransform;
-    joint_positions(1,:) = T{1}(:,4)';
-    
-    % iterate over joints from second joint and use previous transformation
-    for joint_idx = 2:num_joints
+    for joint_idx = 1:num_joints
 
-        % get joint to parent transform and calcualte final transform
-        joint_to_parent_T = robot_struct.Bodies{1, joint_idx}.Joint.JointToParentTransform;
-        T{joint_idx} = T{joint_idx-1} * joint_to_parent_T;
+        % use getTransform
+        bodyname = robot_struct.Bodies{1, joint_idx}.Name;
+        T{joint_idx} = getTransform(robot_struct, t_configuration, bodyname);
 
         % Get joint's world coordinates
         joint_positions(joint_idx,:) = T{joint_idx}(:,4)';
