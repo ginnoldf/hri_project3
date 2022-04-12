@@ -21,7 +21,7 @@ function [joint_positions, T] = updateJointsWorldPosition(robot_struct, theta)
     % iterate over joints and get their base transformations and world coordinates
     num_joints = size(theta,1);
     T = cell(1, num_joints);
-    joint_positionWe firsts = zeros(num_joints, 4); 
+    joint_positions = zeros(num_joints, 4); 
 
     % calculate transformation and position for first joint
     T{1} = robot_struct.Bodies{1, 1}.Joint.JointToParentTransform;
@@ -32,7 +32,9 @@ function [joint_positions, T] = updateJointsWorldPosition(robot_struct, theta)
 
         % get joint to parent transform and calcualte final transform
         joint_to_parent_T = robot_struct.Bodies{1, joint_idx}.Joint.JointToParentTransform;
-        T{joint_idx} = T{joint_idx-1} * joint_to_parent_T;
+        base_to_parent_T = [T{joint_idx-1}(1:3,1:3)' -T{joint_idx-1}(1:3,4)
+            zeros(3,1)' 1];
+        T{joint_idx} =  base_to_parent_T * joint_to_parent_T;
 
         % Get joint's world coordinates
         joint_positions(joint_idx,:) = T{joint_idx}(:,4)';

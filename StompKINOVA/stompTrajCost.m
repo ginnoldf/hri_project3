@@ -34,11 +34,12 @@ function [S, Q, qo, qc, acc_cost, world_pos_time, spheres_time, qo_time] = stomp
     world_pos_time = 0;
     spheres_time = 0;
     qo_time = 0;
-    [~, base_joint_T] = updateJointsWorldPosition(robot_struct, zeros(num_joints));
+    [~, base_joint_T] = updateJointsWorldPositionGetTransform(robot_struct, zeros(num_joints));
     for waypoint_idx = 1:num_waypoints
 
         % get the coordinates of joints in world frame
         world_pos_timer = tic;
+        %[joint_positions, ~] = updateJointsWorldPositionGetTransform(robot_struct, theta(:, waypoint_idx));
         %[joint_positions, ~] = updateJointsWorldPosition(robot_struct, theta(:, waypoint_idx));
         [joint_positions, ~] = updateJointsWorldPositionPOE(robot_struct, theta(:, waypoint_idx), base_joint_T);
         world_pos_time = world_pos_time + toc(world_pos_timer);

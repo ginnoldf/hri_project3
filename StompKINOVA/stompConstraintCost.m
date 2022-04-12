@@ -26,9 +26,9 @@ function cost = stompConstraintCost(robot_struct, theta)
     % calculate y-axis angle to desired y-axis (0 1 0)
     % https://www.analyzemath.com/stepbystep_mathworksheets/vectors/vector3D_angle.html
     desired_y_axis = [0 1 0]';
-    angle = dot(endeffector_y_axis, desired_y_axis) / ...
+    cos_angle = dot(endeffector_y_axis, desired_y_axis) / ...
         (norm(endeffector_y_axis) * norm(endeffector_y_axis));
 
     % calculate cost for the angle
-    cost = (1 - cos(angle)) / 2;
+    cost = (1 - cos_angle) / 2;
 end

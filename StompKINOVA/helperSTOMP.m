@@ -106,8 +106,8 @@ while Q_difference > convergence_threshold
     [~, Q, qo, qc, acc_cost, ~, ~] = stompTrajCost(robot_struct, theta, R, voxel_world);
 
     iter_time = toc(iter_timer);
-    fprintf(['In total: ', num2str(iter_time), 's\n\n']);
-    fprintf(['Cost: ', num2str(Q), 's\n\n']);
+    fprintf(['In total: ', num2str(iter_time), 's\n']);
+    fprintf(['Cost: ', num2str(Q), '\n\n']);
 
     %% Evaluation of iteration result
     Q_list = [Q_list Q];
